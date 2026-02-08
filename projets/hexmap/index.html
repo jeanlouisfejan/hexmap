@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HexMap Viewer</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+</head>
+<body>
+    <div id="menubar">
+        <div class="menu-item">
+            <span class="menu-label">Fichier</span>
+            <div class="menu-dropdown">
+                <div class="menu-option" id="menu-open">Ouvrir PDF...</div>
+                <div class="menu-separator"></div>
+                <div class="menu-option" id="menu-quit">Quitter</div>
+            </div>
+        </div>
+        <div class="menu-item">
+            <span class="menu-label">Affichage</span>
+            <div class="menu-dropdown">
+                <div class="menu-option" id="menu-zoom-in">Zoom + <span class="shortcut">Molette</span></div>
+                <div class="menu-option" id="menu-zoom-out">Zoom - <span class="shortcut">Molette</span></div>
+                <div class="menu-option" id="menu-zoom-reset">Reset zoom <span class="shortcut">Ctrl+0</span></div>
+                <div class="menu-separator"></div>
+                <div class="menu-option" id="menu-fit">Ajuster à la fenêtre</div>
+            </div>
+        </div>
+        <div class="menu-item">
+            <span class="menu-label">Grille</span>
+            <div class="menu-dropdown">
+                <div class="menu-option" id="menu-grid-toggle">Afficher la grille</div>
+                <div class="menu-separator"></div>
+                <div class="menu-option" id="menu-grid-small">Petite (20px)</div>
+                <div class="menu-option checked" id="menu-grid-medium">Moyenne (40px)</div>
+                <div class="menu-option" id="menu-grid-large">Grande (60px)</div>
+            </div>
+        </div>
+    </div>
+    <div id="toolbar">
+        <div id="layer-toggle" class="toggle-switch" title="Couche active — clic pour basculer">
+            <span id="toggle-map" class="toggle-opt active">MAP</span>
+            <span id="toggle-grid" class="toggle-opt">GRILLE</span>
+        </div>
+        <button id="btn-smooth" class="toolbar-btn" title="Zoom progressif on/off">Smooth</button>
+        <div class="toolbar-sep"></div>
+        <button id="btn-rotate" class="toolbar-btn" title="Pivoter la couche active de 90°">&#8635; Pivoter 90°</button>
+    </div>
+    <div id="game-container"></div>
+    <div id="status-bar">
+        <span id="status-text">Prêt</span>
+        <span id="status-info">
+            <span id="active-layer">Couche : Map</span>
+            &nbsp;|&nbsp;
+            <span id="zoom-level">100%</span>
+        </span>
+    </div>
+    <input type="file" id="file-input" accept=".pdf" style="display:none">
+    <script src="app.js"></script>
+</body>
+</html>
