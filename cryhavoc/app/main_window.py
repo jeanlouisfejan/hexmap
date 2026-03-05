@@ -32,6 +32,7 @@ class MainWindow(QMainWindow):
     def _setup_ui(self):
         from app.view import BoardView
         from app.scene import BoardScene
+        from app.panels.maps_panel import MapsPanel
 
         splitter = QSplitter(Qt.Orientation.Horizontal)
         self.setCentralWidget(splitter)
@@ -46,11 +47,10 @@ class MainWindow(QMainWindow):
         splitter.addWidget(self.view)
         splitter.setStretchFactor(1, 1)
 
-        # Les onglets seront ajoutés dans les tâches suivantes
-        # Pour l'instant, juste un placeholder
-        from PyQt6.QtWidgets import QLabel
-        placeholder = QLabel("Onglets à venir...")
-        self.tabs.addTab(placeholder, "Maps")
+        base = Path(__file__).parent.parent
+        self.maps_panel = MapsPanel(base / "maps")
+        self.maps_panel.map_demandee.connect(self._ajouter_map)
+        self.tabs.addTab(self.maps_panel, "Maps")
 
     def _setup_menus(self):
         mb = self.menuBar()
@@ -115,9 +115,37 @@ class MainWindow(QMainWindow):
         self.scene.set_grille_visible(self.grille_action.isChecked())
     def _toggle_snap(self):
         self.scene.snap_actif = self.snap_action.isChecked()
-    def _config_grille(self): pass
+    def _config_grille(self):
+        from app.dialogs.grid_config import GridConfigDialog
+        from app.models import ConfigGrille
+        from PyQt6.QtWidgets import QDialog
+        config = ConfigGrille(
+            cell_w=self.scene._cell_w,
+            cell_h=self.scene._cell_h,
+            offset_x=self.scene._offset_x,
+            offset_y=self.scene._offset_y,
+        )
+        dlg = GridConfigDialog(config, self)
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            c = dlg.get_config()
+            self.scene.set_grille_config(c.cell_w, c.cell_h, c.offset_x, c.offset_y)
     def _a_propos(self): pass
     def _activer_placement_pion(self, pion): pass
     def _activer_placement_marqueur(self, marqueur): pass
-    def _ajouter_map(self, fichier: str): pass
+    def _ajouter_map(self, fichier: str):
+        from PyQt6.QtGui import QPixmap
+        from app.models import MapItem
+        from app.items import MapGraphicsItem
+        x = 0.0
+        for item in self.scene.items():
+            if isinstance(item, MapGraphicsItem):
+                x = max(x, item.pos().x() + item.pixmap().width())
+        pix = QPixmap(fichier)
+        if pix.isNull():
+            return
+        map_model = MapItem(fichier=fichier, x=x, y=0.0)
+        gi = MapGraphicsItem(map_model, pix)
+        self.scene.addItem(gi)
+        self._maps_modeles.append(map_model)
+        self._map_items.append(gi)
     def _scaler_pion(self, pix): return pix
