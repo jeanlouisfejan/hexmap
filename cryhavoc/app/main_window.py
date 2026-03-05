@@ -207,7 +207,25 @@ class MainWindow(QMainWindow):
 
     def _annuler(self): pass
     def _refaire(self): pass
-    def _supprimer_selection(self): pass
+    def _supprimer_selection(self):
+        from app.items import MapGraphicsItem, PionGraphicsItem, MarqueurGraphicsItem
+        for item in list(self.scene.selectedItems()):
+            if isinstance(item, MapGraphicsItem):
+                if item.map_item in self._maps_modeles:
+                    self._maps_modeles.remove(item.map_item)
+                if item in self._map_items:
+                    self._map_items.remove(item)
+            elif isinstance(item, PionGraphicsItem):
+                if item.pion in self._pions_modeles:
+                    self._pions_modeles.remove(item.pion)
+                if item in self._pion_items:
+                    self._pion_items.remove(item)
+            elif isinstance(item, MarqueurGraphicsItem):
+                if item.marqueur in self._marqueurs_modeles:
+                    self._marqueurs_modeles.remove(item.marqueur)
+                if item in self._marqueur_items:
+                    self._marqueur_items.remove(item)
+            self.scene.removeItem(item)
     def _toggle_grille(self):
         self.scene.set_grille_visible(self.grille_action.isChecked())
     def _toggle_snap(self):
