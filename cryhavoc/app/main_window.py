@@ -204,6 +204,7 @@ class MainWindow(QMainWindow):
         )
         self.statusBar().showMessage(f"Sauvegardé : {fichier}", 3000)
         self.setWindowTitle(f"Cry Havoc — {Path(fichier).name}")
+
     def _annuler(self): pass
     def _refaire(self): pass
     def _supprimer_selection(self): pass
