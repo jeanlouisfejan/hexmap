@@ -120,11 +120,90 @@ class MainWindow(QMainWindow):
             a.setShortcut(QKeySequence(shortcut))
         return a
 
-    # --- Slots placeholder ---
-    def _nouveau(self): pass
-    def _ouvrir(self): pass
-    def _enregistrer(self): pass
-    def _enregistrer_sous(self): pass
+    # --- Slots fichier ---
+    def _nouveau(self):
+        self.scene.clear()
+        self._maps_modeles.clear()
+        self._map_items.clear()
+        self._pions_modeles.clear()
+        self._pion_items.clear()
+        self._marqueurs_modeles.clear()
+        self._marqueur_items.clear()
+        self._fichier_sauvegarde = None
+        self.setWindowTitle("Cry Havoc Board Manager")
+
+    def _ouvrir(self):
+        from PyQt6.QtWidgets import QFileDialog
+        from app.persistence import charger
+        from app.items import MapGraphicsItem, PionGraphicsItem, MarqueurGraphicsItem
+        from PyQt6.QtGui import QPixmap
+        f, _ = QFileDialog.getOpenFileName(
+            self, "Ouvrir un plateau", "", "Plateau Cry Havoc (*.json)"
+        )
+        if not f:
+            return
+        self._nouveau()
+        base = Path(__file__).parent.parent
+        maps, pions, marqueurs = charger(Path(f))
+
+        for m in maps:
+            pix = QPixmap(m.fichier)
+            if not pix.isNull():
+                gi = MapGraphicsItem(m, pix)
+                self.scene.addItem(gi)
+                self._maps_modeles.append(m)
+                self._map_items.append(gi)
+
+        for p in pions:
+            img = str(base / "pions" / f"{p.image_key()}.jpg")
+            pix = QPixmap(img)
+            if not pix.isNull():
+                pix = self._scaler_pion(pix)
+                gi = PionGraphicsItem(p, pix, str(base / "pions"))
+                gi.setPos(p.x, p.y)
+                self.scene.addItem(gi)
+                self._pions_modeles.append(p)
+                self._pion_items.append(gi)
+
+        for m in marqueurs:
+            pix = QPixmap(m.fichier)
+            if not pix.isNull():
+                pix = self._scaler_pion(pix)
+                gi = MarqueurGraphicsItem(m, pix)
+                gi.setPos(m.x, m.y)
+                self.scene.addItem(gi)
+                self._marqueurs_modeles.append(m)
+                self._marqueur_items.append(gi)
+
+        self._fichier_sauvegarde = f
+        self.statusBar().showMessage(f"Ouvert : {f}", 3000)
+        self.setWindowTitle(f"Cry Havoc — {Path(f).name}")
+
+    def _enregistrer(self):
+        if self._fichier_sauvegarde:
+            self._faire_sauvegarde(self._fichier_sauvegarde)
+        else:
+            self._enregistrer_sous()
+
+    def _enregistrer_sous(self):
+        from PyQt6.QtWidgets import QFileDialog
+        f, _ = QFileDialog.getSaveFileName(
+            self, "Enregistrer le plateau", "", "Plateau Cry Havoc (*.json)"
+        )
+        if f:
+            self._fichier_sauvegarde = f
+            self._faire_sauvegarde(f)
+
+    def _faire_sauvegarde(self, fichier: str):
+        from app.persistence import sauvegarder
+        sauvegarder(
+            Path(fichier),
+            self._maps_modeles,
+            self._pions_modeles,
+            self._marqueurs_modeles,
+        )
+        self.statusBar().showMessage(f"Sauvegardé : {fichier}", 3000)
+        self.setWindowTitle(f"Cry Havoc — {Path(fichier).name}")
     def _annuler(self): pass
     def _refaire(self): pass
     def _supprimer_selection(self): pass
