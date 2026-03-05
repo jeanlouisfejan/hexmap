@@ -47,6 +47,53 @@ class PionGraphicsItem(QGraphicsPixmapItem):
         if not pix.isNull():
             self.setPixmap(pix)
 
+    def contextMenuEvent(self, event):
+        from PyQt6.QtWidgets import QMenu
+        menu = QMenu()
+
+        # Actions changer état
+        labels_état = {"": "Sain", "_b": "Blessé", "_s": "Sonné", "_m": "Mort"}
+        for état in self.pion.états_disponibles:
+            label = labels_état.get(état, état)
+            a = menu.addAction(label)
+            a.setCheckable(True)
+            a.setChecked(self.pion.état == état)
+            a.setData(("état", état))
+
+        # Monter/Démonter si applicable
+        if self.pion.peut_monter:
+            menu.addSeparator()
+            if self.pion.monté:
+                a = menu.addAction("Démonter")
+                a.setData(("monter", False))
+            else:
+                a = menu.addAction("Monter")
+                a.setData(("monter", True))
+
+        menu.addSeparator()
+        a_retirer = menu.addAction("Retirer")
+        a_retirer.setData(("retirer",))
+        a_supprimer = menu.addAction("Supprimer")
+        a_supprimer.setData(("supprimer",))
+
+        action = menu.exec(event.screenPos().toPoint())
+        if not action:
+            return
+        data = action.data()
+        if not data:
+            return
+
+        if data[0] == "état":
+            self.pion.état = data[1]
+            self.rafraichir_image()
+        elif data[0] == "monter":
+            self.pion.monté = data[1]
+            self.rafraichir_image()
+        elif data[0] == "retirer":
+            self.scene().removeItem(self)
+        elif data[0] == "supprimer":
+            self.scene().removeItem(self)
+
 
 class MarqueurGraphicsItem(QGraphicsPixmapItem):
     def __init__(self, marqueur, pixmap):
