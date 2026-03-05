@@ -149,6 +149,9 @@ class MainWindow(QMainWindow):
         for m in maps:
             pix = QPixmap(m.fichier)
             if not pix.isNull():
+                from PyQt6.QtCore import Qt as _Qt
+                pix = pix.scaledToWidth(self.MAP_TARGET_WIDTH,
+                                        _Qt.TransformationMode.SmoothTransformation)
                 gi = MapGraphicsItem(m, pix)
                 self.scene.addItem(gi)
                 self._maps_modeles.append(m)
@@ -299,8 +302,12 @@ class MainWindow(QMainWindow):
         self.scene.activer_placement(pix, placer)
         self.view.setFocus()
         self.view.setCursor(Qt.CursorShape.CrossCursor)
+    # Largeur cible pour normaliser toutes les maps (px scène)
+    MAP_TARGET_WIDTH = 800
+
     def _ajouter_map(self, fichier: str):
         from PyQt6.QtGui import QPixmap
+        from PyQt6.QtCore import Qt
         from app.models import MapItem
         from app.items import MapGraphicsItem
         x = 0.0
@@ -310,6 +317,9 @@ class MainWindow(QMainWindow):
         pix = QPixmap(fichier)
         if pix.isNull():
             return
+        # Normaliser toutes les maps à la même largeur (aspect ratio conservé)
+        pix = pix.scaledToWidth(self.MAP_TARGET_WIDTH,
+                                 Qt.TransformationMode.SmoothTransformation)
         map_model = MapItem(fichier=fichier, x=x, y=0.0)
         gi = MapGraphicsItem(map_model, pix)
         self.scene.addItem(gi)
