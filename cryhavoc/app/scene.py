@@ -1,4 +1,6 @@
-from PyQt6.QtWidgets import QGraphicsScene
+from PyQt6.QtWidgets import QGraphicsScene, QGraphicsPixmapItem
+from PyQt6.QtCore import QRectF
+from PyQt6.QtGui import QPainter, QColor, QPen
 
 class BoardScene(QGraphicsScene):
     def __init__(self):
@@ -25,8 +27,49 @@ class BoardScene(QGraphicsScene):
         self._offset_y = offset_y
         self.update()
 
-    def placement_actif(self) -> bool:
-        return bool(self._mode_placement)
+    def drawBackground(self, painter: QPainter, rect: QRectF):
+        super().drawBackground(painter, rect)
+        if not self.grille_visible:
+            return
+        pen = QPen(QColor(100, 100, 200, 80))
+        pen.setWidth(0)  # cosmetic pen (1px à l'écran peu importe le zoom)
+        painter.setPen(pen)
+
+        cw, ch = self._cell_w, self._cell_h
+        ox, oy = self._offset_x, self._offset_y
+
+        # Première ligne/colonne visible
+        left = ox + ((rect.left() - ox) // cw) * cw
+        top = oy + ((rect.top() - oy) // ch) * ch
+
+        x = left
+        while x <= rect.right() + cw:
+            painter.drawLine(int(x), int(rect.top()), int(x), int(rect.bottom()))
+            x += cw
+        y = top
+        while y <= rect.bottom() + ch:
+            painter.drawLine(int(rect.left()), int(y), int(rect.right()), int(y))
+            y += ch
+
+    def snap_position(self, x: float, y: float) -> tuple[float, float]:
+        if not self.snap_actif:
+            return x, y
+        cw, ch = self._cell_w, self._cell_h
+        ox, oy = self._offset_x, self._offset_y
+        col = round((x - ox) / cw)
+        row = round((y - oy) / ch)
+        return ox + col * cw + cw / 2, oy + row * ch + ch / 2
+
+    def activer_placement(self, pixmap, callback):
+        self.cancel_placement()
+        ghost = QGraphicsPixmapItem(pixmap)
+        ghost.setOpacity(0.5)
+        ghost.setZValue(100)
+        ghost.setPos(-9999, -9999)
+        self.addItem(ghost)
+        self._ghost = ghost
+        self._placement_callback = callback
+        self._mode_placement = True
 
     def cancel_placement(self):
         if self._ghost:
@@ -35,8 +78,5 @@ class BoardScene(QGraphicsScene):
         self._mode_placement = False
         self._placement_callback = None
 
-    def activer_placement(self, pixmap, callback):
-        pass
-
-    def snap_position(self, x, y):
-        return x, y
+    def placement_actif(self) -> bool:
+        return bool(self._mode_placement)
