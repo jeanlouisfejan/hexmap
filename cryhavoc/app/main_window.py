@@ -33,6 +33,9 @@ class MainWindow(QMainWindow):
         from app.view import BoardView
         from app.scene import BoardScene
         from app.panels.maps_panel import MapsPanel
+        from app.panels.pions_panel import PionsPanel
+        from app.panels.marqueurs_panel import MarqueursPanel
+        from app.panels.aide_panel import AidePanel
 
         splitter = QSplitter(Qt.Orientation.Horizontal)
         self.setCentralWidget(splitter)
@@ -48,9 +51,23 @@ class MainWindow(QMainWindow):
         splitter.setStretchFactor(1, 1)
 
         base = Path(__file__).parent.parent
+
         self.maps_panel = MapsPanel(base / "maps")
         self.maps_panel.map_demandee.connect(self._ajouter_map)
         self.tabs.addTab(self.maps_panel, "Maps")
+
+        self.pions_panel = PionsPanel(base / "pions")
+        self.pions_panel.pion_selectionne.connect(self._activer_placement_pion)
+        self.tabs.addTab(self.pions_panel, "Pions")
+
+        self.marqueurs_panel = MarqueursPanel(base / "marqueurs")
+        self.marqueurs_panel.marqueur_selectionne.connect(self._activer_placement_marqueur)
+        self.tabs.addTab(self.marqueurs_panel, "Marqueurs")
+
+        aide_path = base / "aide"
+        aide_path.mkdir(exist_ok=True)
+        self.aide_panel = AidePanel(aide_path)
+        self.tabs.addTab(self.aide_panel, "Aide")
 
     def _setup_menus(self):
         mb = self.menuBar()

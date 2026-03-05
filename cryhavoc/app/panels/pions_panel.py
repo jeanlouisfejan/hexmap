@@ -1,0 +1,47 @@
+from pathlib import Path
+from PyQt6.QtWidgets import (
+    QWidget, QVBoxLayout, QListWidget, QListWidgetItem
+)
+from PyQt6.QtGui import QIcon, QPixmap
+from PyQt6.QtCore import Qt, pyqtSignal, QSize
+from app.scanner import scanner_pions
+
+class PionsPanel(QWidget):
+    pion_selectionne = pyqtSignal(object)  # Pion
+
+    def __init__(self, dossier: Path, parent=None):
+        super().__init__(parent)
+        self.dossier = Path(dossier)
+        self._pions = []
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(4, 4, 4, 4)
+
+        self.liste = QListWidget()
+        self.liste.setIconSize(QSize(48, 48))
+        layout.addWidget(self.liste)
+
+        self.liste.itemDoubleClicked.connect(self._on_double_clic)
+        self._charger()
+
+    def _charger(self):
+        self.liste.clear()
+        self._pions = []
+        if not self.dossier.exists():
+            return
+        self._pions = scanner_pions(self.dossier)
+        for pion in self._pions:
+            item = QListWidgetItem(pion.nom)
+            img_path = self.dossier / f"{pion.nom}.jpg"
+            if img_path.exists():
+                pix = QPixmap(str(img_path)).scaled(
+                    48, 48, Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation
+                )
+                item.setIcon(QIcon(pix))
+            item.setData(Qt.ItemDataRole.UserRole, pion)
+            self.liste.addItem(item)
+
+    def _on_double_clic(self, item):
+        pion = item.data(Qt.ItemDataRole.UserRole)
+        if pion:
+            self.pion_selectionne.emit(pion)
