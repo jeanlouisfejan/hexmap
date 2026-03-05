@@ -42,3 +42,9 @@ def test_scanner_marqueurs(dossier_marqueurs):
     noms = [m.nom for m in marqueurs]
     assert "fleche" in noms
     assert "feu" in noms
+
+def test_scanner_pions_dossier_inexistant():
+    assert scanner_pions(Path("/nonexistent/path")) == []
+
+def test_scanner_marqueurs_dossier_inexistant():
+    assert scanner_marqueurs(Path("/nonexistent/path")) == []
