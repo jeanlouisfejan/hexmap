@@ -147,8 +147,60 @@ class MainWindow(QMainWindow):
             c = dlg.get_config()
             self.scene.set_grille_config(c.cell_w, c.cell_h, c.offset_x, c.offset_y)
     def _a_propos(self): pass
-    def _activer_placement_pion(self, pion): pass
-    def _activer_placement_marqueur(self, marqueur): pass
+    def _activer_placement_pion(self, pion):
+        from PyQt6.QtGui import QPixmap
+        from PyQt6.QtCore import Qt
+        from pathlib import Path
+        import copy
+        base = Path(__file__).parent.parent
+        img = str(base / "pions" / f"{pion.nom}.jpg")
+        pix = QPixmap(img)
+        if pix.isNull():
+            return
+        pix = self._scaler_pion(pix)
+
+        def placer(scene_pos):
+            from app.items import PionGraphicsItem
+            nouveau = copy.copy(pion)
+            nouveau.x = scene_pos.x() - pix.width() / 2
+            nouveau.y = scene_pos.y() - pix.height() / 2
+            gi = PionGraphicsItem(nouveau, pix, str(base / "pions"))
+            gi.setPos(nouveau.x, nouveau.y)
+            self.scene.addItem(gi)
+            self._pions_modeles.append(nouveau)
+            self._pion_items.append(gi)
+            self.scene.cancel_placement()
+            self.view.unsetCursor()
+
+        self.scene.activer_placement(pix, placer)
+        self.view.setFocus()
+        self.view.setCursor(Qt.CursorShape.CrossCursor)
+
+    def _activer_placement_marqueur(self, marqueur):
+        from PyQt6.QtGui import QPixmap
+        from PyQt6.QtCore import Qt
+        import copy
+        pix = QPixmap(marqueur.fichier)
+        if pix.isNull():
+            return
+        pix = self._scaler_pion(pix)
+
+        def placer(scene_pos):
+            from app.items import MarqueurGraphicsItem
+            m = copy.copy(marqueur)
+            m.x = scene_pos.x() - pix.width() / 2
+            m.y = scene_pos.y() - pix.height() / 2
+            gi = MarqueurGraphicsItem(m, pix)
+            gi.setPos(m.x, m.y)
+            self.scene.addItem(gi)
+            self._marqueurs_modeles.append(m)
+            self._marqueur_items.append(gi)
+            self.scene.cancel_placement()
+            self.view.unsetCursor()
+
+        self.scene.activer_placement(pix, placer)
+        self.view.setFocus()
+        self.view.setCursor(Qt.CursorShape.CrossCursor)
     def _ajouter_map(self, fichier: str):
         from PyQt6.QtGui import QPixmap
         from app.models import MapItem
@@ -165,4 +217,7 @@ class MainWindow(QMainWindow):
         self.scene.addItem(gi)
         self._maps_modeles.append(map_model)
         self._map_items.append(gi)
-    def _scaler_pion(self, pix): return pix
+    def _scaler_pion(self, pix):
+        from PyQt6.QtCore import Qt
+        return pix.scaled(60, 60, Qt.AspectRatioMode.KeepAspectRatio,
+                          Qt.TransformationMode.SmoothTransformation)
